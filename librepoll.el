@@ -24,6 +24,21 @@
 
 ;;; Code:
 
+(require 'request)
+
+(defun instance-status (instance)
+  "Display INSTANCE status in message buffer."
+  (interactive "sInstance url: ")
+  (let ((url (concat instance "/api/v1/status")))
+    (request url
+             :type "GET"
+             :parser 'json-read
+             :success (cl-function
+                       (lambda (&key data &allow-other-keys)
+                         (let ((status (assoc-default 'status data))
+                               (license (assoc-default 'license data)))
+                           (message "%s status: %s (%s)"
+                                    instance status license)))))))
 
 (provide 'librepoll)
 ;;; librepoll.el ends here
