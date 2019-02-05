@@ -1,0 +1,4 @@
+#+TITLE: Emacs-librepoll
+#+STARTUP: indent
+
+Emacs librepoll interface.
