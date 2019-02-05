@@ -26,7 +26,7 @@
 
 (require 'request)
 
-(defun instance-status (instance)
+(defun librepoll-instance-status (instance)
   "Display INSTANCE status in message buffer."
   (interactive "sInstance url: ")
   (let ((url (concat instance "/api/v1/status")))
@@ -39,6 +39,42 @@
                                (license (assoc-default 'license data)))
                            (message "%s status: %s (%s)"
                                     instance status license)))))))
+
+(defun librepoll-poll (instance poll)
+  "Display librepoll poll."
+  (interactive "sInstance url:
+nPoll id: ")
+  (let ((buffer (get-buffer-create (format "* %s-%d *" instance poll)))
+        (url (format "%s/api/v1/poll/%d" instance poll)))
+    (request url
+             :type "GET"
+             :parser 'json-read
+             :success (cl-function
+                       (lambda (&key data &allow-other-keys)
+                         (let ((name        (assoc-default 'name        data))
+                               (description (assoc-default 'description data))
+                               (options     (assoc-default 'options     data)))
+                           (set-buffer buffer)
+                           (switch-to-buffer buffer)
+                           (markdown-mode)
+                           (erase-buffer)
+                           ;; Name & desc
+                           (insert "# " name "\n\n")
+                           (insert description "\n\n")
+                           ;; Options
+                           (apply 'insert
+                                  (mapcar
+                                   (lambda (l)
+                                     (let* ((id   (car l))
+                                            (tab  (cdr l))
+                                            (txt  (aref tab 0))
+                                            (vote (aref tab 1)))
+                                       (format " - %s; %s; %d votes\n"
+                                               id txt vote)))
+                                   options))
+                           ;; Read only
+                           (read-only-mode t)))))
+    t))
 
 (provide 'librepoll)
 ;;; librepoll.el ends here
