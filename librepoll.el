@@ -30,6 +30,7 @@
 (setq librepoll-option-format
       " - %s; %s; **%d votes**; *M-x librepoll-vote RET %s RET %d RET %s*\n")
 
+;;;###autoload
 (defun librepoll-instance-status (instance)
   "Display INSTANCE status in message buffer."
   (interactive "sInstance url: ")
@@ -44,6 +45,7 @@
                            (message "%s status: %s (%s)"
                                     instance status license)))))))
 
+;;;###autoload
 (defun librepoll-poll (instance poll)
   "Display librepoll poll."
   (interactive "sInstance url:
@@ -81,6 +83,7 @@ nPoll id: ")
                            (read-only-mode t)))))
     t))
 
+;;;###autoload
 (defun librepoll-vote (instance poll opt)
   "Vote."
   (interactive "sInstance url:
@@ -91,7 +94,7 @@ nOption: ")
              :type "GET"
              :parser 'json-read
              :success (cl-function
-                       (lambda (&key data &allow-other-keys)
+                       (lambda (&key &allow-other-keys)
                          (message "Vote: Ok"))))
     (librepoll-poll instance poll)))
 
