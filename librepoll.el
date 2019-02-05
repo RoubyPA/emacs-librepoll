@@ -26,6 +26,10 @@
 
 (require 'request)
 
+(defvar librepoll-option-format)
+(setq librepoll-option-format
+      " - %s; %s; **%d votes**; *M-x librepoll-vote RET %s RET %d RET %s*\n")
+
 (defun librepoll-instance-status (instance)
   "Display INSTANCE status in message buffer."
   (interactive "sInstance url: ")
@@ -56,11 +60,12 @@ nPoll id: ")
                                (options     (assoc-default 'options     data)))
                            (set-buffer buffer)
                            (switch-to-buffer buffer)
+                           (read-only-mode 0)
                            (markdown-mode)
                            (erase-buffer)
                            ;; Name & desc
                            (insert "# " name "\n\n")
-                           (insert description "\n\n")
+                           (insert description "\n")
                            ;; Options
                            (apply 'insert
                                   (mapcar
@@ -69,12 +74,26 @@ nPoll id: ")
                                             (tab  (cdr l))
                                             (txt  (aref tab 0))
                                             (vote (aref tab 1)))
-                                       (format " - %s; %s; %d votes\n"
-                                               id txt vote)))
+                                       (format librepoll-option-format
+                                               id txt vote instance poll id)))
                                    options))
                            ;; Read only
                            (read-only-mode t)))))
     t))
+
+(defun librepoll-vote (instance poll opt)
+  "Vote."
+  (interactive "sInstance url:
+nPoll:
+nOption: ")
+  (let ((url (format "%s/api/v1/vote/%d/%d" instance poll opt)))
+    (request url
+             :type "GET"
+             :parser 'json-read
+             :success (cl-function
+                       (lambda (&key data &allow-other-keys)
+                         (message "Vote: Ok"))))
+    (librepoll-poll instance poll)))
 
 (provide 'librepoll)
 ;;; librepoll.el ends here
