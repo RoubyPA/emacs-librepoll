@@ -28,7 +28,7 @@
 
 (defvar librepoll-option-format)
 (setq librepoll-option-format
-      " - %s; %s; **%d votes**; *M-x librepoll-vote RET %s RET %d RET %s*\n")
+      " - %s **%d votes**; *C-c %s*\n")
 
 ;;;###autoload
 (defun librepoll-instance-status (instance)
@@ -44,6 +44,46 @@
                                (license (assoc-default 'license data)))
                            (message "%s status: %s (%s)"
                                     instance status license)))))))
+
+;;;###autoload
+(defun librepoll-vote (instance poll opt)
+  "Vote."
+  (interactive "sInstance url:
+nPoll:
+nOption: ")
+  (let ((url (format "%s/api/v1/vote/%d/%d" instance poll opt)))
+    (request url
+             :type "GET"
+             :parser 'json-read
+             :success (cl-function
+                       (lambda (&key &allow-other-keys)
+                         (message "Vote: Ok"))))
+    (librepoll-poll instance poll)))
+
+(defun map-options (opts instance poll)
+  "Map options, set local key and return list of option line to
+display."
+  (mapcar* (lambda (l c)
+             (let* ((id   (car l))
+                    (tab  (cdr l))
+                    (txt  (aref tab 0))
+                    (vote (aref tab 1)))
+               ;; Bind key
+               (local-set-key (kbd (format "C-c %s" c))
+                              (lambda (yesno)
+                                (interactive "sVote (yes/no): ")
+                                (when (string= yesno "yes")
+                                  (librepoll-vote instance poll
+                                                  (string-to-number
+                                                   (format "%s" id))))))
+               ;; Format
+               (format librepoll-option-format txt vote c)))
+           opts
+           (list "a" "b" "c" "d" "e" "f" "g" "h"
+                 "i" "j" "k" "l" "m" "n" "o" "p"
+                 "q" "r" "s" "t" "u" "v" "w" "x"
+                 "y" "z" "1" "2" "3" "4" "5" "6"
+                 "7" "8" "9" "0")))
 
 ;;;###autoload
 (defun librepoll-poll (instance poll)
@@ -67,36 +107,17 @@ nPoll id: ")
                            (erase-buffer)
                            ;; Name & desc
                            (insert "# " name "\n\n")
-                           (insert description "\n")
+                           (insert description "\n\n")
                            ;; Options
                            (apply 'insert
-                                  (mapcar
-                                   (lambda (l)
-                                     (let* ((id   (car l))
-                                            (tab  (cdr l))
-                                            (txt  (aref tab 0))
-                                            (vote (aref tab 1)))
-                                       (format librepoll-option-format
-                                               id txt vote instance poll id)))
-                                   options))
+                                  (map-options options instance poll))
+                           (local-set-key (kbd "C-c C-r")
+                                          (lambda ()
+                                            (interactive)
+                                            (librepoll-poll instance poll)))
                            ;; Read only
                            (read-only-mode t)))))
     t))
-
-;;;###autoload
-(defun librepoll-vote (instance poll opt)
-  "Vote."
-  (interactive "sInstance url:
-nPoll:
-nOption: ")
-  (let ((url (format "%s/api/v1/vote/%d/%d" instance poll opt)))
-    (request url
-             :type "GET"
-             :parser 'json-read
-             :success (cl-function
-                       (lambda (&key &allow-other-keys)
-                         (message "Vote: Ok"))))
-    (librepoll-poll instance poll)))
 
 (provide 'librepoll)
 ;;; librepoll.el ends here
