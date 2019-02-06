@@ -81,18 +81,18 @@ nOption: ")
                          (message "Vote: Ok"))))
     (librepoll-poll instance poll)))
 
-(defun compute-total (opts)
+(defun lp-compute-total (opts)
   "Return total of vote for OPTS."
   (cond
    ((null opts) 0)
    (t (let* ((h    (car opts))
              (vote (aref (cdr h) 1))) ;Get vote '(id . ["txt" vote])
-        (+ vote (compute-total (cdr opts)))))))
+        (+ vote (lp-compute-total (cdr opts)))))))
 
-(defun map-options (opts instance poll)
+(defun lp-map-options (opts instance poll)
   "Map options, set local key and return list of option line to
 display."
-  (let ((total (compute-total opts)))
+  (let ((total (lp-compute-total opts)))
     (mapcar* (lambda (l c)
                (let* ((id   (car l))
                       (tab  (cdr l))
@@ -143,7 +143,7 @@ nPoll id: ")
                            (insert description "\n\n")
                            ;; Options
                            (apply 'insert
-                                  (map-options options instance poll))
+                                  (lp-map-options options instance poll))
                            ;; Refresh buffer
                            (local-set-key (kbd "C-c C-r")
                                           (lambda ()
