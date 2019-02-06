@@ -25,6 +25,7 @@
 ;;; Code:
 
 (require 'request)
+(require 'cl)
 
 (defvar librepoll-option-format)
 (setq librepoll-option-format
