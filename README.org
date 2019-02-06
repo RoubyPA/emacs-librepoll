@@ -2,3 +2,17 @@
 #+STARTUP: indent
 
 Emacs librepoll interface.
+
+* Build and install
+
+#+BEGIN_SRC shell
+$ make install
+#+END_SRC
+
+* Functions
+
+| Name                        | Args                                          |
+|-----------------------------+-----------------------------------------------|
+| =librepoll-instance-status= | /String:/ *instance*                          |
+| =librepoll-vote=            | /String:/ *instance*; /Number:/ *poll*, *opt* |
+| =librepoll-poll=            | /String:/ *instance*; /Number:/ *poll*        |
