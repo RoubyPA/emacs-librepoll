@@ -29,7 +29,7 @@
 
 (defvar librepoll-option-format)
 (setq librepoll-option-format
-      " - %s **%d votes**; *C-c %s*\n")
+      " - **%s %d votes**; *C-c %s*\n")
 
 ;;;###autoload
 (defun librepoll-instance-status (instance)
@@ -112,10 +112,12 @@ nPoll id: ")
                            ;; Options
                            (apply 'insert
                                   (map-options options instance poll))
+                           ;; Refresh buffer
                            (local-set-key (kbd "C-c C-r")
                                           (lambda ()
                                             (interactive)
                                             (librepoll-poll instance poll)))
+                           (insert "\n\n*Update buffer: C-c C-r*")
                            ;; Read only
                            (read-only-mode t)))))
     t))
