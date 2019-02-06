@@ -29,7 +29,27 @@
 
 (defvar librepoll-option-format)
 (setq librepoll-option-format
-      " - **%s %d votes**; *C-c %s*\n")
+      " - **%s %d votes**; [%s] %d%% *C-c %s*\n")
+
+;;; Progress bar
+(defconst MAX-BAR-SIZE 10)
+
+(defun lp-percentage (for total)
+  "Returns percentage in float."
+  (* (/ (float for) (float total)) 100))
+
+(defun lp-progress-bar-aux (rest char)
+  (if (eq rest 0)
+      ""
+    (concat char (lp-progress-bar-aux (- rest 1) char))))
+
+(defun lp-progress-bar (percentage)
+  "Returns progress bar text for PERCENTAGE."
+  (let* ((num (/ (round percentage) 10))
+         (rnum (* num (/ MAX-BAR-SIZE 10))))
+    (concat (lp-progress-bar-aux rnum "-")
+            (lp-progress-bar-aux (- MAX-BAR-SIZE rnum) " "))))
+
 
 ;;;###autoload
 (defun librepoll-instance-status (instance)
@@ -61,30 +81,42 @@ nOption: ")
                          (message "Vote: Ok"))))
     (librepoll-poll instance poll)))
 
+(defun compute-total (opts)
+  "Return total of vote for OPTS."
+  (cond
+   ((null opts) 0)
+   (t (let* ((h    (car opts))
+             (vote (aref (cdr h) 1))) ;Get vote '(id . ["txt" vote])
+        (+ vote (compute-total (cdr opts)))))))
+
 (defun map-options (opts instance poll)
   "Map options, set local key and return list of option line to
 display."
-  (mapcar* (lambda (l c)
-             (let* ((id   (car l))
-                    (tab  (cdr l))
-                    (txt  (aref tab 0))
-                    (vote (aref tab 1)))
-               ;; Bind key
-               (local-set-key (kbd (format "C-c %s" c))
-                              (lambda (yesno)
-                                (interactive "sVote (yes/no): ")
-                                (when (string= yesno "yes")
-                                  (librepoll-vote instance poll
-                                                  (string-to-number
-                                                   (format "%s" id))))))
-               ;; Format
-               (format librepoll-option-format txt vote c)))
-           opts
-           (list "a" "b" "c" "d" "e" "f" "g" "h"
-                 "i" "j" "k" "l" "m" "n" "o" "p"
-                 "q" "r" "s" "t" "u" "v" "w" "x"
-                 "y" "z" "1" "2" "3" "4" "5" "6"
-                 "7" "8" "9" "0")))
+  (let ((total (compute-total opts)))
+    (mapcar* (lambda (l c)
+               (let* ((id   (car l))
+                      (tab  (cdr l))
+                      (txt  (aref tab 0))
+                      (vote (aref tab 1)))
+                 ;; Bind key
+                 (local-set-key (kbd (format "C-c %s" c))
+                                (lambda (yesno)
+                                  (interactive "sVote (yes/no): ")
+                                  (when (string= yesno "yes")
+                                    (librepoll-vote instance poll
+                                                    (string-to-number
+                                                     (format "%s" id))))))
+                 ;; Format
+                 (format librepoll-option-format txt vote
+                         (lp-progress-bar (lp-percentage vote total))
+                         (lp-percentage vote total)
+                         c)))
+             opts
+             (list "a" "b" "c" "d" "e" "f" "g" "h"
+                   "i" "j" "k" "l" "m" "n" "o" "p"
+                   "q" "r" "s" "t" "u" "v" "w" "x"
+                   "y" "z" "1" "2" "3" "4" "5" "6"
+                   "7" "8" "9" "0"))))
 
 ;;;###autoload
 (defun librepoll-poll (instance poll)
