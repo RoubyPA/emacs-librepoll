@@ -21,15 +21,30 @@ EMACS_COMPILE = -f emacs-lisp-byte-compile
 SOURCES = librepoll.el
 COMPILED_FILE += $(SOURCES:.el=.elc)
 
-.PHONY: clean install uninstall compile copy-sources copy-images
+INST_DIR = $(HOME)/.emacs.d/librepoll
+
+.PHONY: clean install compile
 
 all: compile
 
-compile: $(SOURCES) $(COMPILED_FILE) $(EMACS_PAYLOAD)
+compile: $(SOURCES) $(COMPILED_FILE)
 
 %.elc: %.el
-	$(info Compiling    $<)
+	$(info Compiling    $@)
 	@$(EMACS) $< $(EMACS_COMPILE)
+
+install: compile
+	$(info Install)
+	@mkdir -p $(INST_DIR)
+	@cp -v $(SOURCES) $(INST_DIR)/$(SOURCES)
+	@cp -v $(COMPILED_FILE) $(INST_DIR)/$(COMPILED_FILE)
+	@cp -v LICENSE $(INST_DIR)/LICENSE
+	@cp -v README.org $(INST_DIR)/README.org
+	@echo ""
+	@echo "Is possible you need to add following line in your '.emacs':"
+	@echo "        (load \"$(INST_DIR)/$(COMPILED_FILE)\")"
+
+
 
 clean:
 	$(info Removing)
