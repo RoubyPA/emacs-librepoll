@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2019  Pierre-Antoine Rouby
 
-;; Author: Pierre-Antoine Rouby <prouby@fry>
+;; Author: Pierre-Antoine Rouby <contact@parouby.fr>
 ;; Keywords: extensions, lisp
 
 ;; This program is free software; you can redistribute it and/or modify
